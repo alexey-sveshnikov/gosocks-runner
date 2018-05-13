@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/alexey-sveshnikov/go-socks5"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"github.com/davecgh/go-spew/spew"
+	"log"
 )
 
 var port int
@@ -23,16 +23,16 @@ func main() {
 	flag.Parse()
 
 	conf := &socks5.Config{
+		Logger: log.New(os.Stdout, "", log.LstdFlags),
 	}
 
 	if (aclFile != "") {
 		var aclValues *[]YamlAclItem
-		aclContents, err := ioutil.ReadFile(aclFile);
-		if err != nil {
+		aclFileHandler, err := os.Open(aclFile); if err != nil {
 			panic(err)
 		}
 
-		aclValues, err = ParseYamlRules(aclContents); if err != nil {
+		aclValues, err = ParseYamlRules(aclFileHandler); if err != nil {
 			panic(err)
 		}
 
@@ -50,6 +50,10 @@ func main() {
 
 		spew.Dump(credentials)
 		conf.Credentials = credentials
+	}
+	conf.EventsHandlers = []socks5.EventsHandler{
+		socks5.LoggingEventsHandler{conf.Logger},
+		NewStatsHandler(NewStatsdBackend("localhost:8125")),
 	}
 
 	server, err := socks5.New(conf)

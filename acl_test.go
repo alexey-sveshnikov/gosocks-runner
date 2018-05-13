@@ -6,6 +6,7 @@ import (
 	"net"
 	"github.com/alexey-sveshnikov/go-socks5"
 	"context"
+	"bytes"
 )
 
 var testYamlDocument = `- from:
@@ -36,7 +37,7 @@ var testYamlRules = []YamlAclItem{
 
 func TestYamlFileParsing(t *testing.T) {
 
-	rules, err := ParseYamlRules([]byte(testYamlDocument))
+	rules, err := ParseYamlRules(bytes.NewBufferString(testYamlDocument))
 
 	if err != nil {
 		t.Fatalf("Failed to parse YAML: %v", err)

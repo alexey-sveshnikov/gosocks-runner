@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"net"
 	"gopkg.in/yaml.v2"
+	"io"
 )
 
 type YamlAclItem struct {
@@ -16,9 +17,9 @@ type YamlAclItem struct {
 	Port []int
 }
 
-func ParseYamlRules(data []byte) (*[]YamlAclItem, error) {
+func ParseYamlRules(r io.Reader) (*[]YamlAclItem, error) {
 	var result = []YamlAclItem{}
-	err := yaml.Unmarshal(data, &result);
+	err := yaml.NewDecoder(r).Decode(&result)
 	if err != nil {
 		return nil, fmt.Errorf("error while parsing YAML: %s", err)
 	}
