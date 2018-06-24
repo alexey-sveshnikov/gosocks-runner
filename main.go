@@ -14,12 +14,16 @@ var port int
 var interfaceAddr string
 var aclFile string
 var credsFile string
+var statsdHost string
+var statsdPort int
 
 func main() {
 	flag.IntVar(&port, "port", 1080, "Port number")
 	flag.StringVar(&interfaceAddr, "interface", "0.0.0.0", "Interface address")
 	flag.StringVar(&aclFile, "acl", "", "ACL yaml file")
 	flag.StringVar(&credsFile, "creds", "", "Credentials file")
+	flag.StringVar(&statsdHost, "statsd-host", "", "Statsd hostname")
+	flag.IntVar(&statsdPort, "statd-port", 8125, "Statsd port number")
 	flag.Parse()
 
 	conf := &socks5.Config{
@@ -51,9 +55,11 @@ func main() {
 		spew.Dump(credentials)
 		conf.Credentials = credentials
 	}
-	conf.EventsHandlers = []socks5.EventsHandler{
-		socks5.LoggingEventsHandler{conf.Logger},
-		NewStatsHandler(NewStatsdBackend("localhost:8125")),
+	if statsdHost != "" {
+		conf.EventsHandlers = []socks5.EventsHandler{
+			socks5.LoggingEventsHandler{conf.Logger},
+			NewStatsHandler(NewStatsdBackend(statsdHost + ":" + strconv.Itoa(statsdPort))),
+		}
 	}
 
 	server, err := socks5.New(conf)
